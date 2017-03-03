@@ -30,6 +30,11 @@ Resources:
                       - "logs:CreateLogStream"
                       - "logs:PutLogEvents"
                     Resource: "arn:aws:logs:*:*:*"
+                  -
+                    Effect: "Allow"
+                    Action:
+                      - "sns:*"
+                    Resource: "*"
 
   LambdaFunction:
     Type: AWS::Serverless::Function
