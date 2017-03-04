@@ -1,6 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Lambda function for Health Events
+Parameters:
+  SlackWebHookUrl:
+    Type: String
+    NoEcho: true
+    Description: Slack Webhook Url
+  SlackChannel:
+    Type: String
+    Default: "#health"
+    Description: Slack Channel Name
 Resources:
   LambdaFunctionIAMRole:
       Type: "AWS::IAM::Role"
@@ -56,8 +65,64 @@ Resources:
                 - aws.health
   HealthTopic:
     Type: AWS::SNS::Topic
+  AlertLambdaFunctionIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        -
+          PolicyName: "InlinePolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+              -
+                Effect: "Allow"
+                Action:
+                  - "kms:*"
+                Resource: "*"
+  SlackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SungardAS-Health-Alert-Slack
+      Handler: index_alert_slack.handler
+      Runtime: nodejs4.3
+      CodeUri: ../src
+      Role: !GetAtt AlertLambdaFunctionIAMRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          KMS_REGION: !Ref 'AWS::Region'
+          KMS_KEY_ID: !Ref EncryptionDecryptionKey
+          HOOK_URL: !Ref SlackWebHookUrl
+          SLACK_CHANNEL: !Ref SlackChannel
+      Events:
+        HealthAlertTopic:
+          Type: SNS
+          Properties:
+            Topic: !Ref HealthTopic
 
 Outputs:
   LambdaFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt LambdaFunction.Arn
+  SlackAlertLambdaFunction:
+    Description: "Slack Alert Lambda Function ARN"
+    Value: !GetAtt SlackFunction.Arn
