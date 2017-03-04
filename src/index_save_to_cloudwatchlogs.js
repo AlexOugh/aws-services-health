@@ -51,12 +51,13 @@ exports.handler = function (event, context) {
   var message = message_json.NewStateReason;
   var sentBy = event.Records[0].Sns.TopicArn;
   var sentAt = event.Records[0].Sns.Timestamp;
-  var awsid = null;
+  /*var awsid = null;
   var awsids = message_json.Trigger.Dimensions.filter(function(dimension) {
     return dimension.name == 'LinkedAccount';
   });
   if (awsids[0])  awsid = awsids[0].value;
-  else awsid = message_json.AWSAccountId;
+  else awsid = message_json.AWSAccountId;*/
+  var awsid = message_json.AWSAccountId;
   var alarmName = message_json.AlarmName;
   var timestamp = message_json.StateChangeTime;
 
