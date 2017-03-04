@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Lambda function for Health Events
 Parameters:
+  HealthLogGroupName:
+    Type: String
+    Default: "sgas.health.alerts"
+    Description: Health Cloudwatch Log Group Name
   SlackWebHookUrl:
     Type: String
     NoEcho: true
@@ -79,6 +83,7 @@ Resources:
   LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: AlexOugh-Health
       Handler: index.handler
       Runtime: nodejs4.3
       CodeUri: ./src
@@ -128,11 +133,29 @@ Resources:
                 Effect: "Allow"
                 Action:
                   - "kms:*"
+                  - "cloudwatchlogs:*"
                 Resource: "*"
+  CloudWatchLogsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: AlexOugh-Health-Alert-CloudwatchLogs
+      Handler: index_save_to_cloudwatchlogs.handler
+      Runtime: nodejs4.3
+      CodeUri: ../src
+      Role: !GetAtt AlertLambdaFunctionIAMRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          HEALTH_LOG_GROUP_NAME: !Ref HealthLogGroupName
+      Events:
+        HealthAlertTopic:
+          Type: SNS
+          Properties:
+            Topic: !Ref HealthTopic
   SlackFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: SungardAS-Health-Alert-Slack
+      FunctionName: AlexOugh-Health-Alert-Slack
       Handler: index_alert_slack.handler
       Runtime: nodejs4.3
       CodeUri: ../src
@@ -154,6 +177,9 @@ Outputs:
   LambdaFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt LambdaFunction.Arn
+  CloudWatchLogsLambdaFunction:
+    Description: "CloudWatch Logs Lambda Function ARN"
+    Value: !GetAtt CloudWatchLogsFunction.Arn
   SlackAlertLambdaFunction:
     Description: "Slack Alert Lambda Function ARN"
     Value: !GetAtt SlackFunction.Arn
