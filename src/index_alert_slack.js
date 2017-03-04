@@ -150,7 +150,7 @@ function buildMessage(accountId, message) {
           }*/
         ],
         "author_name": "Sungard Availability Services",
-        "footer": "Created By Sungard Availability Services",
+        "footer": "Created By SungardAS/aws-services",
         "footer_icon": "https://raw.githubusercontent.com/SungardAS/aws-services-lib/master/docs/images/logo.png",
         //"ts": (new Date(params.account.createdAt)).getTime()
       }
