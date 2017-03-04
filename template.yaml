@@ -11,40 +11,71 @@ Parameters:
     Default: "#health"
     Description: Slack Channel Name
 Resources:
+  EncryptionDecryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "Encryption and Decryption key for Lambda"
+      KeyPolicy:
+        Id: "LambdaEncDec"
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "Allow administration of the key"
+            Effect: "Allow"
+            Action:
+              - "kms:*"
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Resource: '*'
+          -
+            Sid: "Allow Encryption Service to use this key"
+            Effect: "Allow"
+            Action:
+              - "kms:Encrypt"
+            Principal:
+              AWS: !GetAtt AlertLambdaFunctionIAMRole.Arn
+            Resource: '*'
+          -
+            Sid: "Allow Decryption Service to use this key"
+            Effect: "Allow"
+            Action:
+              - "kms:Decrypt"
+            Principal:
+              AWS: !GetAtt AlertLambdaFunctionIAMRole.Arn
+            Resource: '*'
   LambdaFunctionIAMRole:
-      Type: "AWS::IAM::Role"
-      Properties:
-          Path: "/"
-          AssumeRolePolicyDocument:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        -
+          PolicyName: "InlinePolicy"
+          PolicyDocument:
             Version: "2012-10-17"
             Statement:
               -
-                Sid: "AllowLambdaServiceToAssumeRole"
                 Effect: "Allow"
                 Action:
-                  - "sts:AssumeRole"
-                Principal:
-                  Service:
-                    - "lambda.amazonaws.com"
-          Policies:
-            -
-              PolicyName: "InlinePolicy"
-              PolicyDocument:
-                Version: "2012-10-17"
-                Statement:
-                  -
-                    Effect: "Allow"
-                    Action:
-                      - "logs:CreateLogGroup"
-                      - "logs:CreateLogStream"
-                      - "logs:PutLogEvents"
-                    Resource: "arn:aws:logs:*:*:*"
-                  -
-                    Effect: "Allow"
-                    Action:
-                      - "sns:*"
-                    Resource: "*"
-
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+              -
+                Effect: "Allow"
+                Action:
+                  - "sns:*"
+                Resource: "*"
   LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -126,3 +157,6 @@ Outputs:
   SlackAlertLambdaFunction:
     Description: "Slack Alert Lambda Function ARN"
     Value: !GetAtt SlackFunction.Arn
+  EncryptionDecryptionKeyId:
+    Description: "Encryption Decryption KMS Key Id"
+    Value: !Ref EncryptionDecryptionKey
