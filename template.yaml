@@ -6,47 +6,7 @@ Parameters:
     Type: String
     Default: "sgas.health.alerts"
     Description: Health Cloudwatch Log Group Name
-  SlackWebHookUrl:
-    Type: String
-    NoEcho: true
-    Description: Slack Webhook Url
-  SlackChannel:
-    Type: String
-    Default: "#health"
-    Description: Slack Channel Name
 Resources:
-  EncryptionDecryptionKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: "Encryption and Decryption key for Lambda"
-      KeyPolicy:
-        Id: "LambdaEncDec"
-        Version: "2012-10-17"
-        Statement:
-          -
-            Sid: "Allow administration of the key"
-            Effect: "Allow"
-            Action:
-              - "kms:*"
-            Principal:
-              AWS: !Ref AWS::AccountId
-            Resource: '*'
-          -
-            Sid: "Allow Encryption Service to use this key"
-            Effect: "Allow"
-            Action:
-              - "kms:Encrypt"
-            Principal:
-              AWS: !GetAtt AlertLambdaFunctionIAMRole.Arn
-            Resource: '*'
-          -
-            Sid: "Allow Decryption Service to use this key"
-            Effect: "Allow"
-            Action:
-              - "kms:Decrypt"
-            Principal:
-              AWS: !GetAtt AlertLambdaFunctionIAMRole.Arn
-            Resource: '*'
   LambdaFunctionIAMRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -132,41 +92,20 @@ Resources:
               -
                 Effect: "Allow"
                 Action:
-                  - "kms:*"
                   - "cloudwatchlogs:*"
                 Resource: "*"
   CloudWatchLogsFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: AlexOugh-Health-Alert-CloudwatchLogs
-      Handler: index_save_to_cloudwatchlogs.handler
+      Handler: index_cloudwatchlogs.handler
       Runtime: nodejs4.3
-      CodeUri: ../src
+      CodeUri: ./src
       Role: !GetAtt AlertLambdaFunctionIAMRole.Arn
       Timeout: 300
       Environment:
         Variables:
           HEALTH_LOG_GROUP_NAME: !Ref HealthLogGroupName
-      Events:
-        HealthAlertTopic:
-          Type: SNS
-          Properties:
-            Topic: !Ref HealthTopic
-  SlackFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: AlexOugh-Health-Alert-Slack
-      Handler: index_alert_slack.handler
-      Runtime: nodejs4.3
-      CodeUri: ../src
-      Role: !GetAtt AlertLambdaFunctionIAMRole.Arn
-      Timeout: 300
-      Environment:
-        Variables:
-          KMS_REGION: !Ref 'AWS::Region'
-          KMS_KEY_ID: !Ref EncryptionDecryptionKey
-          HOOK_URL: !Ref SlackWebHookUrl
-          SLACK_CHANNEL: !Ref SlackChannel
       Events:
         HealthAlertTopic:
           Type: SNS
@@ -180,9 +119,3 @@ Outputs:
   CloudWatchLogsLambdaFunction:
     Description: "CloudWatch Logs Lambda Function ARN"
     Value: !GetAtt CloudWatchLogsFunction.Arn
-  SlackAlertLambdaFunction:
-    Description: "Slack Alert Lambda Function ARN"
-    Value: !GetAtt SlackFunction.Arn
-  EncryptionDecryptionKeyId:
-    Description: "Encryption Decryption KMS Key Id"
-    Value: !Ref EncryptionDecryptionKey

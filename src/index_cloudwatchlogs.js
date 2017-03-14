@@ -1,6 +1,5 @@
 
 var uuid = require('node-uuid');
-var AWS = require('aws-sdk');
 var aws_cloudwatchlog = new (require('aws-services-lib/aws/cloudwatchlog.js'))();
 
 var logGroupName = process.env.HEALTH_LOG_GROUP_NAME;
@@ -65,13 +64,24 @@ exports.handler = function (event, context) {
   function failed(err) { context.fail(err, null); }
   function errored(err) { context.fail(err, null); }
 
+  var logMessage = {
+    "awsid": awsid,
+    "subject": subject,
+    "message": message,
+    "sentBy": sentBy,
+    "sentAt": sentAt
+  };
+
   var input = {
     region: region,
     groupName: logGroupName,
     streamName: timestamp.replace(/:/g, '') + "-" + uuid.v4(),
-    logMessage: event.Records[0].Sns.Message,
-    timestamp: (new Date(timestamp)).getTime()
+    //logMessage: event.Records[0].Sns.Message,
+    logMessage: JSON.stringify(logMessage),
+    //timestamp: (new Date(timestamp)).getTime()
+    timestamp: (new Date()).getTime()
   };
+  console.log(input);
 
   var flows = [
     {func:aws_cloudwatchlog.findLogGroup, success:aws_cloudwatchlog.findLogStream, failure:aws_cloudwatchlog.createLogGroup, error:errored},
