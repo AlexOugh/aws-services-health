@@ -25,8 +25,6 @@ Input Parameter Values
 
 - EncryptionLambdaName:
 
-  Enter the `NAME (not ARN) of the encryption Lambda Function`. If you didn't already deployed the Encryption Lambda Function, see <a href="https://github.com/SungardAS/aws-services-encryption">here</a> to deploy the Lambda Function to Encrypt Environment Variables.
-
 - GitHubPersonalAccessToken:
 
   `Access Token` for CodeBuild to access to the this Github repository. (See <a href="https://help.github.com/articles/creating-an-access-token-for-command-line-use/">here</a> to find how to generate the access token).
@@ -37,7 +35,7 @@ Input Parameter Values
 
 - GitHubSourceRepositoryOwner: `SungardAS`
 
-- ParameterOverrides: `{ "HealthLogGroupName": "sgas.health.alerts", "SlackWebHookUrl": "slack_web_hook_url", "SlackChannel": "slack_channel" }`
+- ParameterOverrides: `{ "HealthLogGroupName": "/SungardAS/Alerts/Health" }`
 
 - ProjectImage: `aws/codebuild/nodejs:4.3.2`
 
