@@ -6,6 +6,9 @@ Parameters:
     Type: String
     Default: "/SungardAS/Alerts/Health"
     Description: Health Cloudwatch Log Group Name
+  SubscriptionFilterDestinationArn:
+    Type: String
+    Description: Subscription Filter Destination Arn
 Resources:
   LambdaFunctionIAMRole:
     Type: "AWS::IAM::Role"
@@ -111,7 +114,12 @@ Resources:
           Type: SNS
           Properties:
             Topic: !Ref HealthTopic
-
+  SubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName: !Ref HealthLogGroupName
+      FilterPattern: ""
+      DestinationArn: !Ref SubscriptionFilterDestinationArn
 Outputs:
   LambdaFunction:
     Description: "Lambda Function ARN"
