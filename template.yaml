@@ -114,12 +114,18 @@ Resources:
           Type: SNS
           Properties:
             Topic: !Ref HealthTopic
+  HealthLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref HealthLogGroupName
   SubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    DependsOn: HealthLogGroup
     Properties:
       LogGroupName: !Ref HealthLogGroupName
       FilterPattern: ""
       DestinationArn: !Ref SubscriptionFilterDestinationArn
+
 Outputs:
   LambdaFunction:
     Description: "Lambda Function ARN"
