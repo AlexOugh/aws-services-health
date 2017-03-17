@@ -4,7 +4,7 @@ Description: Lambda function for Health Events
 Parameters:
   HealthLogGroupName:
     Type: String
-    Default: "sgas.health.alerts"
+    Default: "/SungardAS/Alerts/Health"
     Description: Health Cloudwatch Log Group Name
 Resources:
   LambdaFunctionIAMRole:
